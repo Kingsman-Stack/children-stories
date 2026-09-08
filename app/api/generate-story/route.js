@@ -49,6 +49,7 @@ function localStory(input) {
     const portugueseTitles = ['Luar', 'Estrelinha', 'Porta Encantada', 'Rio Cantante', 'Bicicleta Arco-Íris', 'Jardim Reluzente', 'Castelo de Nuvens', 'Concha Secreta'];
     const portugueseOpenings = ['encontrou um mapa dobrado escondido dentro de um livro sonolento', 'ouviu um pequeno som vindo de uma estrela do tamanho de um bolso', 'notou uma portinha azul na árvore mais antiga', 'seguiu uma canção brilhante até um rio que cantava', 'acordou e encontrou uma bicicleta de arco-íris junto à janela', 'descobriu um jardim onde as flores faziam tic-tac', 'subiu uma escada feita de nuvens acima dos telhados', 'encontrou uma concha brilhante debaixo das ondas'];
     const portugueseFriends = ['um vaga-lume curioso chamado Pip', 'um coelho alegre feito de nuvens', 'um esquilo tímido com um chapéu magnífico', 'uma baleia que conhecia todas as canções do mundo', 'um dragão risonho com meias diferentes', 'um robô gentil com um coração de margarida', 'um gigante de nuvens que colecionava canções de ninar', 'um cavalo-marinho corajoso usando uma coroa'];
+    const portugueseThemes = { adventure: 'aventura', bedtime: 'hora de dormir', friendship: 'amizade', learning: 'aprendizado', fantasy: 'fantasia', brave: 'coragem' };
     const portugueseTitle = `${name} e a Aventura do ${portugueseTitles[recipeIndex]}`;
     return {
       theme: input.theme,
@@ -56,7 +57,7 @@ function localStory(input) {
       title: avoided.has(portugueseTitle) ? `${portugueseTitle} ${Date.now()}` : portugueseTitle,
       paragraphs: [
         `Era uma vez, ${name} ${portugueseOpenings[recipeIndex]}. Tudo brilhava suavemente, como se estivesse esperando por ele.`,
-        `${name} entrou em uma maravilhosa aventura de ${input.theme.toLowerCase()} e conheceu ${portugueseFriends[recipeIndex]}. Juntos, atravessaram uma ponte de folhas douradas, deram três gargalhadas e ajudaram uma pequena luz perdida a encontrar o caminho de casa.`,
+        `${name} entrou em uma maravilhosa aventura de ${portugueseThemes[input.theme.toLowerCase()] || input.theme.toLowerCase()} e conheceu ${portugueseFriends[recipeIndex]}. Juntos, atravessaram uma ponte de folhas douradas, deram três gargalhadas e ajudaram uma pequena luz perdida a encontrar o caminho de casa.`,
         `No fim da viagem, ${name} descobriu que ${lesson}. O caminho para casa brilhava com estrelas.`,
       ],
     };
