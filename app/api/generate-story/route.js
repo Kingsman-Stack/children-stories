@@ -29,6 +29,9 @@ const packs = {
   german: { once: 'Es war einmal', found: 'fand', journey: 'begab sich auf ein Abenteuer', met: 'traf', learned: 'entdeckte, dass', home: 'Der Heimweg funkelte wie ein Stern.' },
   english: { once: 'Once upon a twinkly time', found: 'found', journey: 'stepped into a wonderful adventure', met: 'met', learned: 'discovered that', home: 'The path home shimmered with stars.' },
 };
+const requestLog = new Map();
+const RATE_LIMIT = 10;
+const RATE_WINDOW_MS = 60 * 60 * 1000;
 
 function languagePack(language) {
   const key = language.toLowerCase();
@@ -87,14 +90,43 @@ async function openAiStory(input) {
   return { theme: input.theme, language: input.language, title: String(parsed.title), paragraphs: parsed.paragraphs.map(String).slice(0, 6) };
 }
 
+async function isFlagged(text) {
+  if (!process.env.OPENAI_API_KEY) return false;
+  const response = await fetch('https://api.openai.com/v1/moderations', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+    body: JSON.stringify({ model: 'omni-moderation-latest', input: text }),
+  });
+  if (!response.ok) throw new Error('Moderation request failed');
+  const data = await response.json();
+  return Boolean(data.results?.[0]?.flagged);
+}
+
+function isRateLimited(request) {
+  const ip = (request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown').split(',')[0].trim();
+  const now = Date.now();
+  const recent = (requestLog.get(ip) || []).filter(timestamp => now - timestamp < RATE_WINDOW_MS);
+  if (recent.length >= RATE_LIMIT) return true;
+  recent.push(now);
+  requestLog.set(ip, recent);
+  return false;
+}
+
 export async function POST(request) {
   try {
+    if (isRateLimited(request)) return NextResponse.json({ error: 'Too many story requests. Please try again later.' }, { status: 429 });
     const input = requestSchema.parse(await request.json());
+    const inputText = `${input.childName}\n${input.theme}\n${input.lesson}\n${input.language}`;
+    if (await isFlagged(inputText)) return NextResponse.json({ error: 'This request cannot be used to create a children\'s story.' }, { status: 422 });
+    let story;
     if (process.env.OPENAI_API_KEY) {
-      try { return NextResponse.json({ story: await openAiStory(input) }); }
-      catch { return NextResponse.json({ story: localStory(input), fallback: true }); }
+      try { story = await openAiStory(input); }
+      catch { story = localStory(input); }
+    } else {
+      story = localStory(input);
     }
-    return NextResponse.json({ story: localStory(input), fallback: true });
+    if (await isFlagged(`${story.title}\n${story.paragraphs.join('\n')}`)) return NextResponse.json({ error: 'The generated story did not pass its safety check.' }, { status: 422 });
+    return NextResponse.json({ story, fallback: !process.env.OPENAI_API_KEY });
   } catch {
     return NextResponse.json({ error: 'Invalid story request.' }, { status: 400 });
   }
