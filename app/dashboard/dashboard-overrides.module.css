@@ -1,0 +1,12 @@
+.gridOverride { grid-template-columns: 300px 1fr !important; }
+.darkPage :global([class*="grid"]) > :global([class*="card"]):nth-child(3) { grid-column: 1 / -1; }
+.darkPage { background: #17262d; color: #edf4ef; }
+.darkPage .card, .darkPage .privacy { background: #21353d; border-color: #38515a; box-shadow: none; }
+.darkPage .brand, .darkPage .heading h1, .darkPage .card h2 { color: #a7d2c6; }
+.darkPage .card input, .darkPage .card select { background: #172a31; color: #edf4ef; border-color: #48616a; }
+.darkPage .story { background: #1b3037; border-color: #48616a; }
+.darkPage .story strong { color: #a7d2c6; }
+.darkPage .empty, .darkPage .heading p, .darkPage .privacy p:not(.eyebrow) { color: #bfd0cb; }
+.darkPage .themeButton, .darkPage .signout { border-color: #52736f; color: #a7d2c6; }
+ .darkPage :global([class*="card"]), .darkPage :global([class*="privacy"]) { background: #21353d; border-color: #38515a; box-shadow: none; }
+@media (max-width: 760px) { .gridOverride { grid-template-columns: 1fr !important; } .libraryCard { grid-column: auto; } }
