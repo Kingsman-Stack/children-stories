@@ -12,6 +12,8 @@ export default function Home() {
   const [story, setStory] = useState(null);
   const [isNarrating, setIsNarrating] = useState(false);
   const [audioUrl, setAudioUrl] = useState('');
+  const [illustrationUrl, setIllustrationUrl] = useState('');
+  const [isIllustrating, setIsIllustrating] = useState(false);
   const [library, setLibrary] = useState([]);
   const [recentTitles, setRecentTitles] = useState([]);
   const [parentEmail, setParentEmail] = useState('');
@@ -99,6 +101,19 @@ export default function Home() {
     setIsNarrating(false);
   }
 
+  async function generateIllustration() {
+    if (!story) return;
+    if (!parentEmail) { window.location.href = '/auth'; return; }
+    setIsIllustrating(true);
+    setStatus('Painting a storybook scene...');
+    const response = await fetch('/api/illustrate-story', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(story) });
+    const result = await response.json();
+    if (!response.ok) { setStatus(result.error || 'Illustration could not be created.'); setIsIllustrating(false); return; }
+    setIllustrationUrl(result.imageUrl);
+    setStatus('Your storybook illustration is ready.');
+    setIsIllustrating(false);
+  }
+
   function printStory() {
     if (!parentEmail) { window.location.href = '/auth'; return; }
     window.print();
@@ -115,7 +130,9 @@ export default function Home() {
         <label>Theme</label><div className="chips">{themes.map(item => <button type="button" key={item} className={theme === item ? 'chip selected' : 'chip'} onClick={() => setTheme(item)}>{item}</button>)}</div>
         <label htmlFor="lesson">What should they discover?</label><textarea id="lesson" name="lesson" maxLength={500} placeholder="Being brave can start with one tiny step" />
         <button className="primary" type="submit">Generate my story <span>↗</span></button>{status && <p className="status" role="status">{status}</p>}
-      </form>
+       </form>
+       {story && illustrationUrl && <img className={styles.illustration} src={illustrationUrl} alt={`Storybook illustration for ${story.title}`} />}
+       {story && <button type="button" className={styles.actionButton} onClick={generateIllustration} disabled={isIllustrating}>{isIllustrating ? 'Painting scene...' : 'Create illustration'}</button>}
       <aside className="preview"><p className="step">YOUR STORY</p>{story ? <article className="story" id="story-print"><p className="story-theme">{story.theme}</p><h2>{story.title}</h2>{story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}<div className={styles.storyActions}><button type="button" className={`${styles.actionButton} ${styles.actionPrimary}`} onClick={generateAiNarration} disabled={isNarrating}>{isNarrating ? 'Creating narration...' : 'Listen to story'}</button>{audioUrl && <audio className={styles.audio} controls src={audioUrl} aria-label="AI story narration" />}<button type="button" className={styles.actionButton} onClick={saveStory}>Save to library</button><button type="button" className={styles.actionButton} onClick={printStory}>Print / Save PDF</button><button type="button" className={styles.actionButton} onClick={() => setStory(null)}>Make another story</button>{!parentEmail && <small style={{ width: '100%', color: '#8c9c98' }}>Sign in as a parent to print or save a PDF.</small>}</div></article> : <><div className="moon">☾</div><h2>Your story starts here</h2><p>Fill in a few details and watch a new adventure bloom.</p><div className="stars">· · ✦ · ·</div></>}</aside>
     </section>
       <section className="library" aria-label="Parent story library" style={{ marginTop: 24, background: '#fffefa', border: '1px solid #e4e9e5', borderRadius: 18, padding: 26 }}>

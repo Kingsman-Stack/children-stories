@@ -4,3 +4,4 @@
 .parentLink:hover { background: #286c63; transform: translateY(-2px); }
 @media (max-width: 620px) { .navLinks { gap: 0; }.navNote { display: none; }.parentLink { padding: 9px 13px; } }
 .storyActions { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; border-top: 1px solid #d9e7dd; margin-top: 24px; padding-top: 17px; }.actionButton { border: 1px solid #cfe0d9; border-radius: 8px; background: #fffefa; color: #397d74; padding: 10px 12px; font: 700 11px 'DM Sans', sans-serif; cursor: pointer; }.actionButton:hover { background: #eef7f2; }.actionPrimary { border-color: #397d74; background: #397d74; color: white; }.actionPrimary:hover { background: #286c63; }.actionButton:disabled { opacity: .6; cursor: wait; }.audio { width: 100%; height: 38px; margin-top: 3px; }
+.illustration { display: block; width: min(100%, 460px); max-height: 250px; object-fit: cover; border-radius: 12px; margin: 18px auto; }
