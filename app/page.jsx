@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import styles from './home.module.css';
+import { createClient } from '../lib/supabase/client';
 
 const themes = ['Adventure', 'Bedtime', 'Friendship', 'Learning', 'Fantasy', 'Brave'];
 
@@ -14,6 +15,7 @@ export default function Home() {
   const [voiceName, setVoiceName] = useState('');
   const [library, setLibrary] = useState([]);
   const [recentTitles, setRecentTitles] = useState([]);
+  const [parentEmail, setParentEmail] = useState('');
 
   useEffect(() => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
@@ -28,21 +30,42 @@ export default function Home() {
   }, [voiceName]);
 
   useEffect(() => {
-    try {
-      setLibrary(JSON.parse(window.localStorage.getItem('storysprout-library') || '[]'));
-      setRecentTitles(JSON.parse(window.localStorage.getItem('storysprout-recent-titles') || '[]'));
-    } catch { setLibrary([]); setRecentTitles([]); }
+    async function loadLibrary() {
+      let localLibrary = [];
+      try {
+        localLibrary = JSON.parse(window.localStorage.getItem('storysprout-library') || '[]');
+        setRecentTitles(JSON.parse(window.localStorage.getItem('storysprout-recent-titles') || '[]'));
+      } catch { setRecentTitles([]); }
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setLibrary(localLibrary); return; }
+      setParentEmail(user.email || 'Parent account');
+      const { data } = await supabase.from('stories').select('id,title,language,story_json,created_at').order('created_at', { ascending: false }).limit(30);
+      if (data) setLibrary(data.map(item => ({ ...item.story_json, id: item.id, title: item.title, language: item.language, cloud: true })));
+    }
+    loadLibrary();
   }, []);
 
-  function saveStory() {
+  async function saveStory() {
     if (!story) return;
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data, error } = await supabase.from('stories').insert({ user_id: user.id, title: story.title, language: story.language || 'English', status: 'ready', story_json: story }).select('id').single();
+      if (error) { setStatus('Could not save to your parent library.'); return; }
+      setLibrary(current => [{ ...story, id: data.id, cloud: true }, ...current.filter(item => item.title !== story.title)].slice(0, 30));
+      setParentEmail(user.email || 'Parent account');
+      setStatus('Saved to your cloud library.');
+      return;
+    }
     const nextLibrary = [story, ...library.filter(item => item.title !== story.title)].slice(0, 30);
     setLibrary(nextLibrary);
     window.localStorage.setItem('storysprout-library', JSON.stringify(nextLibrary));
     setStatus('Saved to your story library.');
   }
 
-  function removeStory(title) {
+  async function removeStory(title, id) {
+    if (id) await createClient().from('stories').delete().eq('id', id);
     const nextLibrary = library.filter(item => item.title !== title);
     setLibrary(nextLibrary);
     window.localStorage.setItem('storysprout-library', JSON.stringify(nextLibrary));
@@ -112,9 +135,9 @@ export default function Home() {
       </form>
       <aside className="preview"><p className="step">YOUR STORY</p>{story ? <article className="story"><p className="story-theme">{story.theme}</p><h2>{story.title}</h2>{story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}<div className="story-actions"><button type="button" className="secondary" onClick={toggleNarration}>{isSpeaking ? 'Stop narration' : 'Listen to story'}</button>{voices.length > 0 && <select aria-label="Narration voice" value={voiceName} onChange={event => setVoiceName(event.target.value)}>{voices.map(voice => <option key={`${voice.name}-${voice.lang}`} value={voice.name}>{voice.name}</option>)}</select>}<button type="button" className="secondary" onClick={saveStory}>Save story</button><button type="button" className="secondary" onClick={() => { window.speechSynthesis?.cancel(); setIsSpeaking(false); setStory(null); }}>Make another ↗</button></div></article> : <><div className="moon">☾</div><h2>Your story starts here</h2><p>Fill in a few details and watch a new adventure bloom.</p><div className="stars">· · ✦ · ·</div></>}</aside>
     </section>
-    <section className="library" aria-label="Parent story library" style={{ marginTop: 24, background: '#fffefa', border: '1px solid #e4e9e5', borderRadius: 18, padding: 26 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16, flexWrap: 'wrap' }}><div><p className="step">PARENT LIBRARY</p><h2 style={{ fontFamily: 'Georgia, serif', margin: '8px 0 4px' }}>Saved stories</h2></div><span style={{ color: '#8c9c98', fontSize: 12 }}>{library.length} of 30 saved</span></div>
-      {library.length === 0 ? <p style={{ color: '#8c9c98', fontSize: 13, marginBottom: 0 }}>Save a story after generating it and it will appear here on this device.</p> : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10, marginTop: 18 }}>{library.map(item => <div key={item.title} style={{ border: '1px solid #e4e9e5', borderRadius: 10, padding: 14, background: '#f1f7f3' }}><p className="story-theme" style={{ margin: '0 0 8px' }}>{item.theme}</p><strong style={{ display: 'block', color: '#397d74', marginBottom: 12 }}>{item.title}</strong><button type="button" className="secondary" onClick={() => setStory(item)}>Read</button><button type="button" className="secondary" onClick={() => removeStory(item.title)} style={{ marginLeft: 12 }}>Delete</button></div>)}</div>}
+      <section className="library" aria-label="Parent story library" style={{ marginTop: 24, background: '#fffefa', border: '1px solid #e4e9e5', borderRadius: 18, padding: 26 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16, flexWrap: 'wrap' }}><div><p className="step">PARENT LIBRARY</p><h2 style={{ fontFamily: 'Georgia, serif', margin: '8px 0 4px' }}>Saved stories</h2>{parentEmail && <small style={{ color: '#397d74' }}>Cloud library for {parentEmail}</small>}</div><span style={{ color: '#8c9c98', fontSize: 12 }}>{library.length} of 30 saved</span></div>
+      {library.length === 0 ? <p style={{ color: '#8c9c98', fontSize: 13, marginBottom: 0 }}>Save a story after generating it and it will appear here {parentEmail ? 'across your devices' : 'on this device'}.</p> : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10, marginTop: 18 }}>{library.map(item => <div key={item.id || item.title} style={{ border: '1px solid #e4e9e5', borderRadius: 10, padding: 14, background: '#f1f7f3' }}><p className="story-theme" style={{ margin: '0 0 8px' }}>{item.theme}</p><strong style={{ display: 'block', color: '#397d74', marginBottom: 12 }}>{item.title}</strong><button type="button" className="secondary" onClick={() => setStory(item)}>Read</button><button type="button" className="secondary" onClick={() => removeStory(item.title, item.id)} style={{ marginLeft: 12 }}>Delete</button></div>)}</div>}
     </section>
   </main>;
 }
