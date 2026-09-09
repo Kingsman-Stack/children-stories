@@ -1,0 +1,25 @@
+.page { min-height: 100vh; background: #182b35; color: #f8f3e8; padding: 28px; position: relative; overflow: hidden; }
+.page::before, .page::after { content: ''; position: absolute; border-radius: 50%; pointer-events: none; }
+.page::before { width: 520px; height: 520px; background: #234b55; top: -250px; right: -150px; }
+.page::after { width: 340px; height: 340px; background: #304052; bottom: -190px; left: -120px; }
+.brand { color: #f8f3e8; text-decoration: none; font-size: 23px; font-weight: 700; letter-spacing: -1px; position: relative; z-index: 1; }
+.brand span { color: #9bc9bd; }
+.layout { max-width: 1080px; min-height: calc(100vh - 56px); margin: auto; display: grid; grid-template-columns: 1fr 420px; gap: 90px; align-items: center; position: relative; z-index: 1; }
+.intro { max-width: 500px; }
+.eyebrow { color: #f2a889; font-size: 10px; font-weight: 700; letter-spacing: 2px; }
+.intro h1 { font: 600 clamp(45px, 6vw, 76px)/.98 Georgia, serif; letter-spacing: -4px; margin: 20px 0; }
+.intro h1 em { color: #9bc9bd; font-style: normal; }
+.intro p { color: #b6c9c6; font-size: 15px; line-height: 1.7; max-width: 350px; }
+.constellation { color: #f2a889; font-size: 26px; letter-spacing: 15px; margin-top: 34px; }
+.card { background: #fffdf8; color: #263335; border-radius: 20px; padding: 34px; box-shadow: 0 24px 70px #07151c66; }
+.card h2 { font: 600 30px Georgia, serif; margin: 8px 0 7px; }
+.cardIntro { color: #80908e; font-size: 13px; line-height: 1.5; margin: 0 0 22px; }
+.form label { display: block; color: #637170; font-size: 10px; font-weight: 700; letter-spacing: .8px; margin: 17px 0 8px; text-transform: uppercase; }
+.form input { width: 100%; border: 1px solid #dce5e0; border-radius: 8px; background: #fff; padding: 13px; font: inherit; outline: none; }
+.form input:focus { border-color: #64a99c; box-shadow: 0 0 0 3px #e4f1ec; }
+.submit { width: 100%; display: flex; justify-content: space-between; border: 0; border-radius: 8px; margin-top: 24px; padding: 14px; background: #397d74; color: white; font-weight: 700; cursor: pointer; }
+.submit:disabled { opacity: .6; cursor: wait; }
+.message { color: #397d74; font-size: 12px; line-height: 1.5; }
+.switch { display: block; border: 0; background: none; color: #397d74; font-size: 12px; font-weight: 700; margin: 18px auto 0; cursor: pointer; }
+.back { color: #8ca7a4; display: inline-block; font-size: 12px; margin-top: 22px; text-decoration: none; }
+@media (max-width: 760px) { .page { padding: 22px 17px; }.layout { display: block; min-height: auto; }.intro { margin: 80px auto 38px; text-align: center; }.intro p { margin: auto; }.constellation { margin-top: 24px; }.card { max-width: 450px; margin: auto; padding: 26px 22px; } }

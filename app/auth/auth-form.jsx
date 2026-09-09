@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { createClient } from '../../lib/supabase/client';
 
-export default function AuthForm() {
+export default function AuthForm({ styles }) {
   const [mode, setMode] = useState('sign-in');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,5 +22,5 @@ export default function AuthForm() {
     if (mode === 'sign-in') window.location.href = '/';
   }
 
-  return <form className="auth-form" onSubmit={submit}><label htmlFor="email">Parent email</label><input id="email" type="email" value={email} onChange={event => setEmail(event.target.value)} required autoComplete="email" /><label htmlFor="password">Password</label><input id="password" type="password" value={password} onChange={event => setPassword(event.target.value)} minLength={8} required autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'} /><button className="primary" type="submit" disabled={busy}>{busy ? 'Please wait...' : mode === 'sign-in' ? 'Sign in' : 'Create parent account'} <span>↗</span></button>{message && <p className="status" role="status">{message}</p>}<button className="auth-switch" type="button" onClick={() => { setMode(mode === 'sign-in' ? 'sign-up' : 'sign-in'); setMessage(''); }}>{mode === 'sign-in' ? 'Need an account? Create one' : 'Already have an account? Sign in'}</button></form>;
+  return <form className={styles.form} onSubmit={submit}><label htmlFor="email">Parent email</label><input id="email" type="email" value={email} onChange={event => setEmail(event.target.value)} required autoComplete="email" /><label htmlFor="password">Password</label><input id="password" type="password" value={password} onChange={event => setPassword(event.target.value)} minLength={8} required autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'} /><button className={styles.submit} type="submit" disabled={busy}>{busy ? 'Please wait...' : mode === 'sign-in' ? 'Sign in' : 'Create parent account'} <span>↗</span></button>{message && <p className={styles.message} role="status">{message}</p>}<button className={styles.switch} type="button" onClick={() => { setMode(mode === 'sign-in' ? 'sign-up' : 'sign-in'); setMessage(''); }}>{mode === 'sign-in' ? 'Need an account? Create one' : 'Already have an account? Sign in'}</button></form>;
 }
