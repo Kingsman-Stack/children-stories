@@ -10,26 +10,11 @@ export default function Home() {
   const [theme, setTheme] = useState('Adventure');
   const [status, setStatus] = useState('');
   const [story, setStory] = useState(null);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [isNarrating, setIsNarrating] = useState(false);
   const [audioUrl, setAudioUrl] = useState('');
-  const [voices, setVoices] = useState([]);
-  const [voiceName, setVoiceName] = useState('');
   const [library, setLibrary] = useState([]);
   const [recentTitles, setRecentTitles] = useState([]);
   const [parentEmail, setParentEmail] = useState('');
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    const loadVoices = () => {
-      const availableVoices = window.speechSynthesis.getVoices().filter(voice => voice.lang.toLowerCase().startsWith('en'));
-      setVoices(availableVoices);
-      if (!voiceName && availableVoices[0]) setVoiceName(availableVoices[0].name);
-    };
-    loadVoices();
-    window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
-    return () => window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
-  }, [voiceName]);
 
   useEffect(() => {
     async function loadLibrary() {
@@ -100,33 +85,6 @@ export default function Home() {
     }
   }
 
-  function toggleNarration() {
-    if (!story || typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      setStatus('Text-to-speech is not available in this browser.');
-      return;
-    }
-    if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-      return;
-    }
-    const narration = new SpeechSynthesisUtterance(`${story.title}. ${story.paragraphs.join(' ')}`);
-    const gentleVoiceNames = ['Samantha', 'Ava', 'Karen', 'Zira', 'Jenny', 'Google UK English Female', 'Microsoft Aria Online'];
-    const voices = window.speechSynthesis.getVoices();
-    const gentleVoice = voices.find(voice => voice.name === voiceName) || voices.find(voice => gentleVoiceNames.some(name => voice.name.toLowerCase().includes(name.toLowerCase()))) || voices.find(voice => voice.lang.toLowerCase().startsWith('en'));
-    if (gentleVoice) {
-      narration.voice = gentleVoice;
-      narration.lang = gentleVoice.lang;
-    } else {
-      narration.lang = 'en-US';
-    }
-    narration.rate = 0.82;
-    narration.pitch = 1.12;
-    narration.onend = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(narration);
-    setIsSpeaking(true);
-  }
-
   async function generateAiNarration() {
     if (!story) return;
     setIsNarrating(true);
@@ -151,7 +109,7 @@ export default function Home() {
         <label htmlFor="lesson">What should they discover?</label><textarea id="lesson" name="lesson" maxLength={500} placeholder="Being brave can start with one tiny step" />
         <button className="primary" type="submit">Generate my story <span>↗</span></button>{status && <p className="status" role="status">{status}</p>}
       </form>
-      <aside className="preview"><p className="step">YOUR STORY</p>{story ? <article className="story"><p className="story-theme">{story.theme}</p><h2>{story.title}</h2>{story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}<div className="story-actions"><button type="button" className="secondary" onClick={toggleNarration}>{isSpeaking ? 'Stop browser voice' : 'Browser voice'}</button><button type="button" className="secondary" onClick={generateAiNarration} disabled={isNarrating}>{isNarrating ? 'Making audio...' : 'AI narration'}</button>{audioUrl && <audio controls src={audioUrl} aria-label="AI story narration" />}{voices.length > 0 && <select aria-label="Narration voice" value={voiceName} onChange={event => setVoiceName(event.target.value)}>{voices.map(voice => <option key={`${voice.name}-${voice.lang}`} value={voice.name}>{voice.name}</option>)}</select>}<button type="button" className="secondary" onClick={saveStory}>Save story</button><button type="button" className="secondary" onClick={() => { window.speechSynthesis?.cancel(); setIsSpeaking(false); setStory(null); }}>Make another ↗</button></div></article> : <><div className="moon">☾</div><h2>Your story starts here</h2><p>Fill in a few details and watch a new adventure bloom.</p><div className="stars">· · ✦ · ·</div></>}</aside>
+      <aside className="preview"><p className="step">YOUR STORY</p>{story ? <article className="story"><p className="story-theme">{story.theme}</p><h2>{story.title}</h2>{story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}<div className="story-actions"><button type="button" className="secondary" onClick={generateAiNarration} disabled={isNarrating}>{isNarrating ? 'Making audio...' : 'Generate AI narration'}</button>{audioUrl && <audio controls src={audioUrl} aria-label="AI story narration" />}<button type="button" className="secondary" onClick={saveStory}>Save story</button><button type="button" className="secondary" onClick={() => setStory(null)}>Make another ↗</button></div></article> : <><div className="moon">☾</div><h2>Your story starts here</h2><p>Fill in a few details and watch a new adventure bloom.</p><div className="stars">· · ✦ · ·</div></>}</aside>
     </section>
       <section className="library" aria-label="Parent story library" style={{ marginTop: 24, background: '#fffefa', border: '1px solid #e4e9e5', borderRadius: 18, padding: 26 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16, flexWrap: 'wrap' }}><div><p className="step">PARENT LIBRARY</p><h2 style={{ fontFamily: 'Georgia, serif', margin: '8px 0 4px' }}>Saved stories</h2>{parentEmail && <small style={{ color: '#397d74' }}>Cloud library for {parentEmail}</small>}</div><span style={{ color: '#8c9c98', fontSize: 12 }}>{library.length} of 30 saved</span></div>
