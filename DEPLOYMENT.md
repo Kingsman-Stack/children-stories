@@ -19,8 +19,8 @@ Add these in Vercel, not in the source code:
 ```text
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
-ANTHROPIC_API_KEY
-ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
+OPENAI_API_KEY
+OPENAI_MODEL=gpt-4o-mini
 ```
 
 Keep these server-only for later features:
@@ -44,6 +44,6 @@ The current library is local browser storage. Supabase persistence and parent au
 ## Before launch
 
 - Confirm the homepage and story form work on the Vercel URL.
-- Add the Anthropic key to enable fresh AI stories and full language generation.
+- Add the OpenAI key to enable fresh AI stories and full language generation.
 - Test AI failure fallback, rate limits, moderation, and authentication before collecting real user data.
 - Add a custom domain after the preview deployment passes.

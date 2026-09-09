@@ -74,25 +74,24 @@ function localStory(input) {
   };
 }
 
-async function aiStory(input) {
+async function openAiStory(input) {
   const prompt = `Create one safe, original children's story as JSON only. Return exactly {"title":"string","theme":"string","language":"string","paragraphs":["string","string","string"]}. Write the entire story in ${input.language}. Child name: ${input.childName}. Age band: ${input.age}. Theme: ${input.theme}. Lesson: ${input.lesson || 'a gentle positive lesson'}. Use age-appropriate vocabulary, culturally natural phrasing, no frightening violence, no sexual content, no dangerous instructions, and do not repeat any of these titles: ${input.avoidTitles.join(' | ')}.`;
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022', max_tokens: 900, temperature: 0.95, messages: [{ role: 'user', content: prompt }] }),
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+    body: JSON.stringify({ model: process.env.OPENAI_MODEL || 'gpt-4o-mini', temperature: 0.95, response_format: { type: 'json_object' }, messages: [{ role: 'system', content: 'You create safe, warm, age-appropriate stories for children.' }, { role: 'user', content: prompt }] }),
   });
   if (!response.ok) throw new Error('AI provider request failed');
   const data = await response.json();
-  const text = data.content?.find(item => item.type === 'text')?.text || '';
-  const parsed = JSON.parse(text.replace(/^```json\s*|\s*```$/g, ''));
+  const parsed = JSON.parse(data.choices?.[0]?.message?.content || '{}');
   return { theme: input.theme, language: input.language, title: String(parsed.title), paragraphs: parsed.paragraphs.map(String).slice(0, 6) };
 }
 
 export async function POST(request) {
   try {
     const input = requestSchema.parse(await request.json());
-    if (process.env.ANTHROPIC_API_KEY) {
-      try { return NextResponse.json({ story: await aiStory(input) }); }
+    if (process.env.OPENAI_API_KEY) {
+      try { return NextResponse.json({ story: await openAiStory(input) }); }
       catch { return NextResponse.json({ story: localStory(input), fallback: true }); }
     }
     return NextResponse.json({ story: localStory(input), fallback: true });
