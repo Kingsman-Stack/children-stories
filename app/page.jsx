@@ -11,24 +11,18 @@ export default function Home() {
   const [status, setStatus] = useState('');
   const [story, setStory] = useState(null);
   const [isNarrating, setIsNarrating] = useState(false);
+  const [isIllustrating, setIsIllustrating] = useState(false);
   const [audioUrl, setAudioUrl] = useState('');
   const [illustrationUrl, setIllustrationUrl] = useState('');
-  const [isIllustrating, setIsIllustrating] = useState(false);
   const [library, setLibrary] = useState([]);
   const [recentTitles, setRecentTitles] = useState([]);
   const [parentEmail, setParentEmail] = useState('');
 
   useEffect(() => {
     async function loadLibrary() {
-      try {
-        const openedStory = window.sessionStorage.getItem('storysprout-open-story');
-        if (openedStory) { setStory(JSON.parse(openedStory)); window.sessionStorage.removeItem('storysprout-open-story'); }
-      } catch { /* Ignore an unavailable session store. */ }
+      try { const openedStory = window.sessionStorage.getItem('storysprout-open-story'); if (openedStory) { setStory(JSON.parse(openedStory)); window.sessionStorage.removeItem('storysprout-open-story'); } } catch { /* Ignore unavailable session storage. */ }
       let localLibrary = [];
-      try {
-        localLibrary = JSON.parse(window.localStorage.getItem('storysprout-library') || '[]');
-        setRecentTitles(JSON.parse(window.localStorage.getItem('storysprout-recent-titles') || '[]'));
-      } catch { setRecentTitles([]); }
+      try { localLibrary = JSON.parse(window.localStorage.getItem('storysprout-library') || '[]'); setRecentTitles(JSON.parse(window.localStorage.getItem('storysprout-recent-titles') || '[]')); } catch { setRecentTitles([]); }
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLibrary(localLibrary); return; }
@@ -44,100 +38,49 @@ export default function Home() {
     if (!parentEmail) { window.location.href = '/auth'; return; }
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data, error } = await supabase.from('stories').insert({ user_id: user.id, title: story.title, language: story.language || 'English', status: 'ready', story_json: story }).select('id').single();
-      if (error) { setStatus('Could not save to your parent library.'); return; }
-      setLibrary(current => [{ ...story, id: data.id, cloud: true }, ...current.filter(item => item.title !== story.title)].slice(0, 30));
-      setParentEmail(user.email || 'Parent account');
-      setStatus('Saved to your cloud library.');
-      return;
-    }
-    const nextLibrary = [story, ...library.filter(item => item.title !== story.title)].slice(0, 30);
-    setLibrary(nextLibrary);
-    window.localStorage.setItem('storysprout-library', JSON.stringify(nextLibrary));
-    setStatus('Saved to your story library.');
+    if (!user) return;
+    const { data, error } = await supabase.from('stories').insert({ user_id: user.id, title: story.title, language: story.language || 'English', status: 'ready', story_json: story }).select('id').single();
+    if (error) { setStatus('Could not save to your parent library.'); return; }
+    setLibrary(current => [{ ...story, id: data.id, cloud: true }, ...current.filter(item => item.title !== story.title)].slice(0, 30));
+    setStatus('Saved to your cloud library.');
   }
 
-  async function removeStory(title, id) {
-    if (id) await createClient().from('stories').delete().eq('id', id);
-    const nextLibrary = library.filter(item => item.title !== title);
-    setLibrary(nextLibrary);
-    window.localStorage.setItem('storysprout-library', JSON.stringify(nextLibrary));
-  }
+  async function removeStory(title, id) { if (id) await createClient().from('stories').delete().eq('id', id); setLibrary(current => current.filter(item => item.title !== title)); }
 
   async function generateStory(event) {
-    event.preventDefault();
-    setStatus('Preparing a safe story prompt...');
+    event.preventDefault(); setStatus('Preparing a safe story prompt...');
     const data = Object.fromEntries(new FormData(event.currentTarget));
-    const response = await fetch('/api/generate-story', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ ...data, theme, avoidTitles: [...new Set([...recentTitles, ...library.map(item => item.title)])] }),
-    });
+    const response = await fetch('/api/generate-story', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...data, theme, avoidTitles: [...new Set([...recentTitles, ...library.map(item => item.title)])] }) });
     const result = await response.json();
-    if (result.story) {
-      setStory(result.story);
-      setRecentTitles(current => {
-        const nextTitles = [...new Set([...current, result.story.title])].slice(-200);
-        window.localStorage.setItem('storysprout-recent-titles', JSON.stringify(nextTitles));
-        return nextTitles;
-      });
-      setStatus('Your story is ready.');
-    } else {
-      setStatus(result.error || 'Please check the form and try again.');
-    }
+    if (!result.story) { setStatus(result.error || 'Please check the form and try again.'); return; }
+    setStory(result.story); setAudioUrl(''); setIllustrationUrl(''); setStatus('Your story is ready.');
+    setRecentTitles(current => { const nextTitles = [...new Set([...current, result.story.title])].slice(-200); window.localStorage.setItem('storysprout-recent-titles', JSON.stringify(nextTitles)); return nextTitles; });
   }
 
   async function generateAiNarration() {
-    if (!story) return;
-    if (!parentEmail) { window.location.href = '/auth'; return; }
-    setIsNarrating(true);
-    setStatus('Creating a gentle AI narration...');
+    if (!story) return; if (!parentEmail) { window.location.href = '/auth'; return; }
+    setIsNarrating(true); setStatus('Creating a gentle AI narration...');
     const response = await fetch('/api/narrate-story', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(story) });
     if (!response.ok) { const result = await response.json(); setStatus(result.error || 'Narration could not be created.'); setIsNarrating(false); return; }
-    if (audioUrl) URL.revokeObjectURL(audioUrl);
-    setAudioUrl(URL.createObjectURL(await response.blob()));
-    setStatus('AI narration is ready.');
-    setIsNarrating(false);
+    if (audioUrl) URL.revokeObjectURL(audioUrl); setAudioUrl(URL.createObjectURL(await response.blob())); setStatus('AI narration is ready.'); setIsNarrating(false);
   }
 
   async function generateIllustration() {
-    if (!story) return;
-    if (!parentEmail) { window.location.href = '/auth'; return; }
-    setIsIllustrating(true);
-    setStatus('Painting a storybook scene...');
+    if (!story) return; if (!parentEmail) { window.location.href = '/auth'; return; }
+    setIsIllustrating(true); setStatus('Painting a storybook scene...');
     const response = await fetch('/api/illustrate-story', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(story) });
     const result = await response.json();
     if (!response.ok) { setStatus(result.error || 'Illustration could not be created.'); setIsIllustrating(false); return; }
-    setIllustrationUrl(result.imageUrl);
-    setStatus('Your storybook illustration is ready.');
-    setIsIllustrating(false);
+    setIllustrationUrl(result.imageUrl); setStatus('Your storybook illustration is ready.'); setIsIllustrating(false);
   }
 
-  function printStory() {
-    if (!parentEmail) { window.location.href = '/auth'; return; }
-    window.print();
-  }
+  function printStory() { if (!parentEmail) { window.location.href = '/auth'; return; } window.print(); }
 
   return <main className="shell">
     <nav className={styles.nav}><a className="brand" href="/">story<span>sprout</span></a><div className={styles.navLinks}><span className={`${styles.navNote} nav-note`}>A little magic for every bedtime</span><a className={styles.parentLink} href="/dashboard"><span>Parent dashboard</span> <span>↗</span></a></div></nav>
     <section className="hero"><p className="eyebrow">YOUR STORY STUDIO</p><h1>Big adventures.<br /><em>Little listeners.</em></h1><p>Create a safe, one-of-a-kind story made for your child.</p></section>
-    <section className="studio">
-      <form onSubmit={generateStory} className="card">
-        <p className="step">STEP 01</p><h2>Set the scene</h2>
-        <label htmlFor="childName">Child&apos;s name</label><input id="childName" name="childName" required maxLength={60} placeholder="e.g. Maya" />
-        <div className="two-up"><div><label htmlFor="age">Age</label><select id="age" name="age" defaultValue="early-reader"><option value="toddler">Toddler</option><option value="early-reader">Early reader</option><option value="middle-grade">Middle grade</option></select></div><div><label htmlFor="language">Language</label><select id="language" name="language"><option>English</option><option>Spanish</option><option>French</option><option>Portuguese</option><option>Dutch</option><option>German</option><option>Italian</option><option>Mandarin</option><option>Japanese</option><option>Korean</option><option>Arabic</option><option>Hindi</option></select></div></div>
-        <label>Theme</label><div className="chips">{themes.map(item => <button type="button" key={item} className={theme === item ? 'chip selected' : 'chip'} onClick={() => setTheme(item)}>{item}</button>)}</div>
-        <label htmlFor="lesson">What should they discover?</label><textarea id="lesson" name="lesson" maxLength={500} placeholder="Being brave can start with one tiny step" />
-        <button className="primary" type="submit">Generate my story <span>↗</span></button>{status && <p className="status" role="status">{status}</p>}
-       </form>
-       {story && illustrationUrl && <img className={styles.illustration} src={illustrationUrl} alt={`Storybook illustration for ${story.title}`} />}
-       {story && <button type="button" className={styles.actionButton} onClick={generateIllustration} disabled={isIllustrating}>{isIllustrating ? 'Painting scene...' : 'Create illustration'}</button>}
-      <aside className="preview"><p className="step">YOUR STORY</p>{story ? <article className="story" id="story-print"><p className="story-theme">{story.theme}</p><h2>{story.title}</h2>{story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}<div className={styles.storyActions}><button type="button" className={`${styles.actionButton} ${styles.actionPrimary}`} onClick={generateAiNarration} disabled={isNarrating}>{isNarrating ? 'Creating narration...' : 'Listen to story'}</button>{audioUrl && <audio className={styles.audio} controls src={audioUrl} aria-label="AI story narration" />}<button type="button" className={styles.actionButton} onClick={saveStory}>Save to library</button><button type="button" className={styles.actionButton} onClick={printStory}>Print / Save PDF</button><button type="button" className={styles.actionButton} onClick={() => setStory(null)}>Make another story</button>{!parentEmail && <small style={{ width: '100%', color: '#8c9c98' }}>Sign in as a parent to print or save a PDF.</small>}</div></article> : <><div className="moon">☾</div><h2>Your story starts here</h2><p>Fill in a few details and watch a new adventure bloom.</p><div className="stars">· · ✦ · ·</div></>}</aside>
-    </section>
-      <section className="library" aria-label="Parent story library" style={{ marginTop: 24, background: '#fffefa', border: '1px solid #e4e9e5', borderRadius: 18, padding: 26 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16, flexWrap: 'wrap' }}><div><p className="step">PARENT LIBRARY</p><h2 style={{ fontFamily: 'Georgia, serif', margin: '8px 0 4px' }}>Saved stories</h2>{parentEmail && <small style={{ color: '#397d74' }}>Cloud library for {parentEmail}</small>}</div><span style={{ color: '#8c9c98', fontSize: 12 }}>{library.length} of 30 saved</span></div>
-      {library.length === 0 ? <p style={{ color: '#8c9c98', fontSize: 13, marginBottom: 0 }}>Save a story after generating it and it will appear here {parentEmail ? 'across your devices' : 'on this device'}.</p> : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10, marginTop: 18 }}>{library.map(item => <div key={item.id || item.title} style={{ border: '1px solid #e4e9e5', borderRadius: 10, padding: 14, background: '#f1f7f3' }}><p className="story-theme" style={{ margin: '0 0 8px' }}>{item.theme}</p><strong style={{ display: 'block', color: '#397d74', marginBottom: 12 }}>{item.title}</strong><button type="button" className="secondary" onClick={() => setStory(item)}>Read</button><button type="button" className="secondary" onClick={() => removeStory(item.title, item.id)} style={{ marginLeft: 12 }}>Delete</button></div>)}</div>}
-    </section>
+    <section className="studio"><form onSubmit={generateStory} className="card"><p className="step">STEP 01</p><h2>Set the scene</h2><label htmlFor="childName">Child&apos;s name</label><input id="childName" name="childName" required maxLength={60} placeholder="e.g. Maya" /><div className="two-up"><div><label htmlFor="age">Age</label><select id="age" name="age" defaultValue="early-reader"><option value="toddler">Toddler</option><option value="early-reader">Early reader</option><option value="middle-grade">Middle grade</option></select></div><div><label htmlFor="language">Language</label><select id="language" name="language"><option>English</option><option>Spanish</option><option>French</option><option>Portuguese</option><option>Dutch</option><option>German</option><option>Italian</option><option>Mandarin</option><option>Japanese</option><option>Korean</option><option>Arabic</option><option>Hindi</option></select></div></div><label>Theme</label><div className="chips">{themes.map(item => <button type="button" key={item} className={theme === item ? 'chip selected' : 'chip'} onClick={() => setTheme(item)}>{item}</button>)}</div><label htmlFor="lesson">What should they discover?</label><textarea id="lesson" name="lesson" maxLength={500} placeholder="Being brave can start with one tiny step" /><button className="primary" type="submit">Generate my story <span>↗</span></button>{status && <p className="status" role="status">{status}</p>}</form>
+      <aside className="preview"><p className="step">YOUR STORY</p>{story ? <article className="story" id="story-print"><p className="story-theme">{story.theme}</p><h2>{story.title}</h2>{story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}{illustrationUrl && <img className={styles.illustration} src={illustrationUrl} alt={`Storybook illustration for ${story.title}`} />}<div className={styles.storyActions}><button type="button" className={`${styles.actionButton} ${styles.actionPrimary}`} onClick={generateAiNarration} disabled={isNarrating}>{isNarrating ? 'Creating narration...' : 'Listen to story'}</button><button type="button" className={styles.actionButton} onClick={generateIllustration} disabled={isIllustrating}>{isIllustrating ? 'Painting scene...' : 'Create illustration'}</button>{audioUrl && <audio className={styles.audio} controls src={audioUrl} aria-label="AI story narration" />}<button type="button" className={styles.actionButton} onClick={saveStory}>Save to library</button><button type="button" className={styles.actionButton} onClick={printStory}>Print / Save PDF</button><button type="button" className={styles.actionButton} onClick={() => setStory(null)}>Make another story</button>{!parentEmail && <small style={{ width: '100%', color: '#8c9c98' }}>Sign in as a parent to print or save a PDF.</small>}</div></article> : <><div className="moon">☾</div><h2>Your story starts here</h2><p>Fill in a few details and watch a new adventure bloom.</p><div className="stars">· · ✦ · ·</div></>}</aside></section>
+    <section className="library" aria-label="Parent story library" style={{ marginTop: 24, background: '#fffefa', border: '1px solid #e4e9e5', borderRadius: 18, padding: 26 }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16, flexWrap: 'wrap' }}><div><p className="step">PARENT LIBRARY</p><h2 style={{ fontFamily: 'Georgia, serif', margin: '8px 0 4px' }}>Saved stories</h2>{parentEmail && <small style={{ color: '#397d74' }}>Cloud library for {parentEmail}</small>}</div><span style={{ color: '#8c9c98', fontSize: 12 }}>{library.length} of 30 saved</span></div>{library.length === 0 ? <p style={{ color: '#8c9c98', fontSize: 13, marginBottom: 0 }}>Save a story after generating it and it will appear here {parentEmail ? 'across your devices' : 'on this device'}.</p> : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10, marginTop: 18 }}>{library.map(item => <div key={item.id || item.title} style={{ border: '1px solid #e4e9e5', borderRadius: 10, padding: 14, background: '#f1f7f3' }}><p className="story-theme" style={{ margin: '0 0 8px' }}>{item.theme}</p><strong style={{ display: 'block', color: '#397d74', marginBottom: 12 }}>{item.title}</strong><button type="button" className="secondary" onClick={() => setStory(item)}>Read</button><button type="button" className="secondary" onClick={() => removeStory(item.title, item.id)} style={{ marginLeft: 12 }}>Delete</button></div>)}</div>}</section>
   </main>;
 }
