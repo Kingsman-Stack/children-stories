@@ -31,6 +31,10 @@ export default function Home() {
 
   useEffect(() => {
     async function loadLibrary() {
+      try {
+        const openedStory = window.sessionStorage.getItem('storysprout-open-story');
+        if (openedStory) { setStory(JSON.parse(openedStory)); window.sessionStorage.removeItem('storysprout-open-story'); }
+      } catch { /* Ignore an unavailable session store. */ }
       let localLibrary = [];
       try {
         localLibrary = JSON.parse(window.localStorage.getItem('storysprout-library') || '[]');
