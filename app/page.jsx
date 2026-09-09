@@ -126,7 +126,7 @@ export default function Home() {
   }
 
   return <main className="shell">
-    <nav className={styles.nav}><a className="brand" href="/">story<span>sprout</span></a><div className={styles.navLinks}><span className={`${styles.navNote} nav-note`}>A little magic for every bedtime</span><a className={styles.parentLink} href="/auth"><span>For parents</span> <span>↗</span></a></div></nav>
+    <nav className={styles.nav}><a className="brand" href="/">story<span>sprout</span></a><div className={styles.navLinks}><span className={`${styles.navNote} nav-note`}>A little magic for every bedtime</span><a className={styles.parentLink} href="/dashboard"><span>Parent dashboard</span> <span>↗</span></a></div></nav>
     <section className="hero"><p className="eyebrow">YOUR STORY STUDIO</p><h1>Big adventures.<br /><em>Little listeners.</em></h1><p>Create a safe, one-of-a-kind story made for your child.</p></section>
     <section className="studio">
       <form onSubmit={generateStory} className="card">

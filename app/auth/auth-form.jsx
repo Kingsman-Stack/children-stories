@@ -19,7 +19,7 @@ export default function AuthForm({ styles }) {
     setBusy(false);
     if (result.error) { setMessage(result.error.message); return; }
     setMessage(mode === 'sign-in' ? 'Signed in. Redirecting...' : 'Account created. Check your email if confirmation is enabled.');
-    if (mode === 'sign-in') window.location.href = '/';
+    if (mode === 'sign-in') window.location.href = '/dashboard';
   }
 
   return <form className={styles.form} onSubmit={submit}><label htmlFor="email">Parent email</label><input id="email" type="email" value={email} onChange={event => setEmail(event.target.value)} required autoComplete="email" /><label htmlFor="password">Password</label><input id="password" type="password" value={password} onChange={event => setPassword(event.target.value)} minLength={8} required autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'} /><button className={styles.submit} type="submit" disabled={busy}>{busy ? 'Please wait...' : mode === 'sign-in' ? 'Sign in' : 'Create parent account'} <span>↗</span></button>{message && <p className={styles.message} role="status">{message}</p>}<button className={styles.switch} type="button" onClick={() => { setMode(mode === 'sign-in' ? 'sign-up' : 'sign-in'); setMessage(''); }}>{mode === 'sign-in' ? 'Need an account? Create one' : 'Already have an account? Sign in'}</button></form>;
