@@ -1,0 +1,11 @@
+body.dark-theme { background: #17262d; color: #edf4ef; }
+body.dark-theme .hero h1, body.dark-theme .card h2, body.dark-theme .preview h2 { color: #edf4ef; }
+body.dark-theme .hero h1 em, body.dark-theme .brand, body.dark-theme .card h2, body.dark-theme .preview h2 { color: #a7d2c6; }
+body.dark-theme .card, body.dark-theme .library { background: #21353d !important; border-color: #38515a; box-shadow: none; }
+body.dark-theme .preview { background: #1d3a3b; border-color: #385e5a; }
+body.dark-theme .card input, body.dark-theme .card select, body.dark-theme .card textarea { background: #172a31; color: #edf4ef; border-color: #48616a; }
+body.dark-theme .choice, body.dark-theme .chip { background: #1b3037; color: #c4d4d0; border-color: #48616a; }
+body.dark-theme .story p:not(.story-theme), body.dark-theme .hero-copy, body.dark-theme .preview p:not(.step), body.dark-theme .empty { color: #bfd0cb !important; }
+body.dark-theme .parentLink { background: #6aa99b; color: #17262d !important; }
+body.dark-theme .actionButton { background: #203b40; color: #a7d2c6; border-color: #52736f; }
+body.dark-theme .actionPrimary { background: #6aa99b; color: #17262d; }

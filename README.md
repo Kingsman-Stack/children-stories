@@ -15,6 +15,7 @@ StorySprout is a parent-owned story platform for creating safe, personalized sto
 - Private illustration storage with signed URLs
 - Print and Save as PDF for signed-in parents
 - International language selection
+- Light and dark theme switch
 
 ## Product Direction
 

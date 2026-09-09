@@ -20,6 +20,7 @@
 - Read-along highlighting synchronized with narration.
 - Parent dashboard with read history, streaks, and vocabulary.
 - Story library and history per child profile.
+- Light and dark theme switch saved per device.
 
 ## Non-Negotiables
 

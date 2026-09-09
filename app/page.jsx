@@ -17,6 +17,7 @@ export default function Home() {
   const [library, setLibrary] = useState([]);
   const [recentTitles, setRecentTitles] = useState([]);
   const [parentEmail, setParentEmail] = useState('');
+  const [darkTheme, setDarkTheme] = useState(false);
 
   useEffect(() => {
     async function loadLibrary() {
@@ -32,6 +33,19 @@ export default function Home() {
     }
     loadLibrary();
   }, []);
+
+  useEffect(() => {
+    const savedTheme = window.localStorage.getItem('storysprout-theme') === 'dark';
+    setDarkTheme(savedTheme);
+    document.body.classList.toggle('dark-theme', savedTheme);
+  }, []);
+
+  function toggleTheme() {
+    const nextTheme = !darkTheme;
+    setDarkTheme(nextTheme);
+    document.body.classList.toggle('dark-theme', nextTheme);
+    window.localStorage.setItem('storysprout-theme', nextTheme ? 'dark' : 'light');
+  }
 
   async function saveStory() {
     if (!story) return;
@@ -86,7 +100,7 @@ export default function Home() {
   function printStory() { if (!parentEmail) { window.location.href = '/auth'; return; } window.print(); }
 
   return <main className="shell">
-    <nav className={styles.nav}><a className="brand" href="/">story<span>sprout</span></a><div className={styles.navLinks}><span className={`${styles.navNote} nav-note`}>A little magic for every bedtime</span><a className={styles.parentLink} href="/dashboard"><span>Parent dashboard</span> <span>↗</span></a></div></nav>
+    <nav className={styles.nav}><a className="brand" href="/">story<span>sprout</span></a><div className={styles.navLinks}><span className={`${styles.navNote} nav-note`}>A little magic for every bedtime</span><button className={styles.themeButton} type="button" onClick={toggleTheme}>{darkTheme ? 'Light theme' : 'Dark theme'}</button><a className={styles.parentLink} href="/dashboard"><span>Parent dashboard</span> <span>↗</span></a></div></nav>
     <section className="hero"><p className="eyebrow">YOUR STORY STUDIO</p><h1>Big adventures.<br /><em>Little listeners.</em></h1><p>Create a safe, one-of-a-kind story made for your child.</p></section>
     <section className="studio"><form onSubmit={generateStory} className="card"><p className="step">STEP 01</p><h2>Set the scene</h2><label htmlFor="childName">Child&apos;s name</label><input id="childName" name="childName" required maxLength={60} placeholder="e.g. Maya" /><div className="two-up"><div><label htmlFor="age">Age</label><select id="age" name="age" defaultValue="early-reader"><option value="toddler">Toddler</option><option value="early-reader">Early reader</option><option value="middle-grade">Middle grade</option></select></div><div><label htmlFor="language">Language</label><select id="language" name="language"><option>English</option><option>Spanish</option><option>French</option><option>Portuguese</option><option>Dutch</option><option>German</option><option>Italian</option><option>Mandarin</option><option>Japanese</option><option>Korean</option><option>Arabic</option><option>Hindi</option></select></div></div><label>Theme</label><div className="chips">{themes.map(item => <button type="button" key={item} className={theme === item ? 'chip selected' : 'chip'} onClick={() => setTheme(item)}>{item}</button>)}</div><label htmlFor="lesson">What should they discover?</label><textarea id="lesson" name="lesson" maxLength={500} placeholder="Being brave can start with one tiny step" /><button className="primary" type="submit">Generate my story <span>↗</span></button>{status && <p className="status" role="status">{status}</p>}</form>
       <aside className="preview"><p className="step">YOUR STORY</p>{story ? <article className="story" id="story-print"><p className="story-theme">{story.theme}</p><h2>{story.title}</h2>{story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}{illustrationUrl && <img className={styles.illustration} src={illustrationUrl} alt={`Storybook illustration for ${story.title}`} />}<div className={styles.storyActions}><button type="button" className={`${styles.actionButton} ${styles.actionPrimary}`} onClick={generateAiNarration} disabled={isNarrating}>{isNarrating ? 'Creating narration...' : 'Listen to story'}</button><button type="button" className={styles.actionButton} onClick={generateIllustration} disabled={isIllustrating}>{isIllustrating ? 'Painting scene...' : 'Create illustration'}</button>{audioUrl && <audio className={styles.audio} controls src={audioUrl} aria-label="AI story narration" />}<button type="button" className={styles.actionButton} onClick={saveStory}>Save to library</button><button type="button" className={styles.actionButton} onClick={printStory}>Print / Save PDF</button><button type="button" className={styles.actionButton} onClick={() => setStory(null)}>Make another story</button>{!parentEmail && <small style={{ width: '100%', color: '#8c9c98' }}>Sign in as a parent to print or save a PDF.</small>}</div></article> : <><div className="moon">☾</div><h2>Your story starts here</h2><p>Fill in a few details and watch a new adventure bloom.</p><div className="stars">· · ✦ · ·</div></>}</aside></section>

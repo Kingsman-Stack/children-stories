@@ -1,4 +1,5 @@
 .nav { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.themeButton { border: 1px solid #dce5e0; border-radius: 999px; background: transparent; color: #397d74; padding: 9px 12px; font: 700 11px 'DM Sans', sans-serif; cursor: pointer; }
 .navLinks { display: flex; align-items: center; gap: 20px; }
 .parentLink { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; background: #397d74; color: #fff !important; padding: 10px 16px; font-size: 12px; font-weight: 700; text-decoration: none !important; box-shadow: 0 7px 18px #397d7430; transition: transform .2s, background .2s; }
 .parentLink:hover { background: #286c63; transform: translateY(-2px); }
