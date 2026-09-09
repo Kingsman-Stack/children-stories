@@ -12,6 +12,7 @@ export default function Home() {
   const [story, setStory] = useState(null);
   const [parentEmail, setParentEmail] = useState('');
   const [library, setLibrary] = useState([]);
+  const [characters, setCharacters] = useState([]);
   const [recentTitles, setRecentTitles] = useState([]);
   const [darkTheme, setDarkTheme] = useState(false);
   const [audioUrl, setAudioUrl] = useState('');
@@ -33,6 +34,8 @@ export default function Home() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLibrary(localLibrary); return; }
       setParentEmail(user.email || 'Parent account');
+      const { data: savedCharacters } = await supabase.from('characters').select('id,name,traits').order('created_at', { ascending: true });
+      setCharacters(savedCharacters || []);
       const { data } = await supabase.from('stories').select('id,title,language,story_json,created_at').order('created_at', { ascending: false }).limit(30);
       if (!data) return;
       setLibrary(await Promise.all(data.map(async item => {
@@ -51,7 +54,8 @@ export default function Home() {
   async function generateStory(event) {
     event.preventDefault(); setStatus('Preparing a safe story prompt...');
     const data = Object.fromEntries(new FormData(event.currentTarget));
-    const response = await fetch('/api/generate-story', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...data, theme, avoidTitles: [...new Set([...recentTitles, ...library.map(item => item.title)])] }) });
+    const selectedCharacter = characters.find(character => character.id === data.characterId);
+    const response = await fetch('/api/generate-story', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...data, theme, characterName: selectedCharacter?.name || '', characterTraits: selectedCharacter?.traits || '', avoidTitles: [...new Set([...recentTitles, ...library.map(item => item.title)])] }) });
     const result = await response.json();
     if (!result.story) { setStatus(result.error || 'Please check the form and try again.'); return; }
     setStory(result.story); setAudioUrl(''); setAudioPath(''); setIllustrationUrl(''); setActiveParagraph(-1); setStatus('Your story is ready.');

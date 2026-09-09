@@ -7,6 +7,8 @@ const requestSchema = z.object({
   theme: z.string().trim().min(1).max(40),
   lesson: z.string().trim().max(500).default(''),
   language: z.string().trim().min(2).max(40),
+  characterName: z.string().trim().max(60).default(''),
+  characterTraits: z.string().trim().max(300).default(''),
   avoidTitles: z.array(z.string().max(200)).max(100).default([]),
 });
 
@@ -45,7 +47,7 @@ function localStory(input) {
   const title = available[Math.floor(Math.random() * Math.max(available.length, 1))] || `${input.childName} and the ${words[Math.floor(Math.random() * words.length)]} Adventure ${Date.now()}`;
   const recipe = recipes.find(item => title.includes(item[0])) || recipes[0];
   const recipeIndex = recipes.indexOf(recipe);
-  const name = input.childName;
+  const name = input.characterName || input.childName;
   const lesson = input.lesson || (input.language.toLowerCase() === 'portuguese' ? 'a bondade pode começar com um pequeno gesto' : 'being brave can start with one tiny step');
   const language = input.language.toLowerCase();
   if (language === 'portuguese') {
@@ -78,7 +80,7 @@ function localStory(input) {
 }
 
 async function openAiStory(input) {
-  const prompt = `Create one safe, original children's story as JSON only. Return exactly {"title":"string","theme":"string","language":"string","paragraphs":["string","string","string"]}. Write the entire story in ${input.language}. Child name: ${input.childName}. Age band: ${input.age}. Theme: ${input.theme}. Lesson: ${input.lesson || 'a gentle positive lesson'}. Use age-appropriate vocabulary, culturally natural phrasing, no frightening violence, no sexual content, no dangerous instructions, and do not repeat any of these titles: ${input.avoidTitles.join(' | ')}.`;
+  const prompt = `Create one safe, original children's story as JSON only. Return exactly {"title":"string","theme":"string","language":"string","paragraphs":["string","string","string"]}. Write the entire story in ${input.language}. Child name: ${input.childName}. Recurring character: ${input.characterName || 'invent a friendly protagonist'}. Character traits: ${input.characterTraits || 'kind and curious'}. Age band: ${input.age}. Theme: ${input.theme}. Lesson: ${input.lesson || 'a gentle positive lesson'}. Use age-appropriate vocabulary, culturally natural phrasing, no frightening violence, no sexual content, no dangerous instructions, and do not repeat any of these titles: ${input.avoidTitles.join(' | ')}.`;
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
