@@ -55,7 +55,7 @@ export default function Home() {
     event.preventDefault(); setStatus('Preparing a safe story prompt...');
     const data = Object.fromEntries(new FormData(event.currentTarget));
     const selectedCharacter = characters.find(character => character.id === data.characterId);
-    const response = await fetch('/api/generate-story', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...data, theme, characterName: selectedCharacter?.name || '', characterTraits: selectedCharacter?.traits || '', avoidTitles: [...new Set([...recentTitles, ...library.map(item => item.title)])] }) });
+    const response = await fetch('/api/generate-story', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...data, theme, characterName: selectedCharacter?.name || data.childName, characterTraits: selectedCharacter?.traits || 'kind, curious', avoidTitles: [...new Set([...recentTitles, ...library.map(item => item.title)])] }) });
     const result = await response.json();
     if (!result.story) { setStatus(result.error || 'Please check the form and try again.'); return; }
     setStory(result.story); setAudioUrl(''); setAudioPath(''); setIllustrationUrl(''); setActiveParagraph(-1); setStatus('Your story is ready.');
