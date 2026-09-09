@@ -1,4 +1,6 @@
 .gridOverride { grid-template-columns: 300px 1fr !important; }
+.navActions { display: flex; align-items: center; gap: 12px; }
+:global([class*="nav"] > div) { display: flex; align-items: center; gap: 12px; }
 .darkPage :global([class*="grid"]) > :global([class*="card"]):nth-child(3) { grid-column: 1 / -1; }
 .darkPage { background: #17262d; color: #edf4ef; }
 .darkPage .card, .darkPage .privacy { background: #21353d; border-color: #38515a; box-shadow: none; }
@@ -10,3 +12,4 @@
 .darkPage .themeButton, .darkPage .signout { border-color: #52736f; color: #a7d2c6; }
  .darkPage :global([class*="card"]), .darkPage :global([class*="privacy"]) { background: #21353d; border-color: #38515a; box-shadow: none; }
 @media (max-width: 760px) { .gridOverride { grid-template-columns: 1fr !important; } .libraryCard { grid-column: auto; } }
+@media (max-width: 460px) { :global([class*="nav"] > div) { gap: 7px; } }
