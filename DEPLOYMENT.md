@@ -21,6 +21,7 @@ NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 OPENAI_API_KEY
 OPENAI_MODEL=gpt-4o-mini
+OPENAI_TTS_VOICE=nova
 ```
 
 Keep these server-only for later features:

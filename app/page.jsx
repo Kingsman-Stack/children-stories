@@ -11,6 +11,8 @@ export default function Home() {
   const [status, setStatus] = useState('');
   const [story, setStory] = useState(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isNarrating, setIsNarrating] = useState(false);
+  const [audioUrl, setAudioUrl] = useState('');
   const [voices, setVoices] = useState([]);
   const [voiceName, setVoiceName] = useState('');
   const [library, setLibrary] = useState([]);
@@ -125,6 +127,18 @@ export default function Home() {
     setIsSpeaking(true);
   }
 
+  async function generateAiNarration() {
+    if (!story) return;
+    setIsNarrating(true);
+    setStatus('Creating a gentle AI narration...');
+    const response = await fetch('/api/narrate-story', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(story) });
+    if (!response.ok) { const result = await response.json(); setStatus(result.error || 'Narration could not be created.'); setIsNarrating(false); return; }
+    if (audioUrl) URL.revokeObjectURL(audioUrl);
+    setAudioUrl(URL.createObjectURL(await response.blob()));
+    setStatus('AI narration is ready.');
+    setIsNarrating(false);
+  }
+
   return <main className="shell">
     <nav className={styles.nav}><a className="brand" href="/">story<span>sprout</span></a><div className={styles.navLinks}><span className={`${styles.navNote} nav-note`}>A little magic for every bedtime</span><a className={styles.parentLink} href="/dashboard"><span>Parent dashboard</span> <span>↗</span></a></div></nav>
     <section className="hero"><p className="eyebrow">YOUR STORY STUDIO</p><h1>Big adventures.<br /><em>Little listeners.</em></h1><p>Create a safe, one-of-a-kind story made for your child.</p></section>
@@ -132,12 +146,12 @@ export default function Home() {
       <form onSubmit={generateStory} className="card">
         <p className="step">STEP 01</p><h2>Set the scene</h2>
         <label htmlFor="childName">Child&apos;s name</label><input id="childName" name="childName" required maxLength={60} placeholder="e.g. Maya" />
-        <div className="two-up"><div><label htmlFor="age">Age</label><select id="age" name="age" defaultValue="early-reader"><option value="toddler">Toddler</option><option value="early-reader">Early reader</option><option value="middle-grade">Middle grade</option></select></div><div><label htmlFor="language">Language</label><select id="language" name="language"><option>English</option><option>Spanish</option><option>French</option><option>Portuguese</option><option>Arabic</option><option>Hindi</option><option>Yoruba</option><option>Hausa</option><option>Igbo</option></select></div></div>
+        <div className="two-up"><div><label htmlFor="age">Age</label><select id="age" name="age" defaultValue="early-reader"><option value="toddler">Toddler</option><option value="early-reader">Early reader</option><option value="middle-grade">Middle grade</option></select></div><div><label htmlFor="language">Language</label><select id="language" name="language"><option>English</option><option>Spanish</option><option>French</option><option>Portuguese</option><option>Dutch</option><option>German</option><option>Italian</option><option>Mandarin</option><option>Japanese</option><option>Korean</option><option>Arabic</option><option>Hindi</option></select></div></div>
         <label>Theme</label><div className="chips">{themes.map(item => <button type="button" key={item} className={theme === item ? 'chip selected' : 'chip'} onClick={() => setTheme(item)}>{item}</button>)}</div>
         <label htmlFor="lesson">What should they discover?</label><textarea id="lesson" name="lesson" maxLength={500} placeholder="Being brave can start with one tiny step" />
         <button className="primary" type="submit">Generate my story <span>↗</span></button>{status && <p className="status" role="status">{status}</p>}
       </form>
-      <aside className="preview"><p className="step">YOUR STORY</p>{story ? <article className="story"><p className="story-theme">{story.theme}</p><h2>{story.title}</h2>{story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}<div className="story-actions"><button type="button" className="secondary" onClick={toggleNarration}>{isSpeaking ? 'Stop narration' : 'Listen to story'}</button>{voices.length > 0 && <select aria-label="Narration voice" value={voiceName} onChange={event => setVoiceName(event.target.value)}>{voices.map(voice => <option key={`${voice.name}-${voice.lang}`} value={voice.name}>{voice.name}</option>)}</select>}<button type="button" className="secondary" onClick={saveStory}>Save story</button><button type="button" className="secondary" onClick={() => { window.speechSynthesis?.cancel(); setIsSpeaking(false); setStory(null); }}>Make another ↗</button></div></article> : <><div className="moon">☾</div><h2>Your story starts here</h2><p>Fill in a few details and watch a new adventure bloom.</p><div className="stars">· · ✦ · ·</div></>}</aside>
+      <aside className="preview"><p className="step">YOUR STORY</p>{story ? <article className="story"><p className="story-theme">{story.theme}</p><h2>{story.title}</h2>{story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}<div className="story-actions"><button type="button" className="secondary" onClick={toggleNarration}>{isSpeaking ? 'Stop browser voice' : 'Browser voice'}</button><button type="button" className="secondary" onClick={generateAiNarration} disabled={isNarrating}>{isNarrating ? 'Making audio...' : 'AI narration'}</button>{audioUrl && <audio controls src={audioUrl} aria-label="AI story narration" />}{voices.length > 0 && <select aria-label="Narration voice" value={voiceName} onChange={event => setVoiceName(event.target.value)}>{voices.map(voice => <option key={`${voice.name}-${voice.lang}`} value={voice.name}>{voice.name}</option>)}</select>}<button type="button" className="secondary" onClick={saveStory}>Save story</button><button type="button" className="secondary" onClick={() => { window.speechSynthesis?.cancel(); setIsSpeaking(false); setStory(null); }}>Make another ↗</button></div></article> : <><div className="moon">☾</div><h2>Your story starts here</h2><p>Fill in a few details and watch a new adventure bloom.</p><div className="stars">· · ✦ · ·</div></>}</aside>
     </section>
       <section className="library" aria-label="Parent story library" style={{ marginTop: 24, background: '#fffefa', border: '1px solid #e4e9e5', borderRadius: 18, padding: 26 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16, flexWrap: 'wrap' }}><div><p className="step">PARENT LIBRARY</p><h2 style={{ fontFamily: 'Georgia, serif', margin: '8px 0 4px' }}>Saved stories</h2>{parentEmail && <small style={{ color: '#397d74' }}>Cloud library for {parentEmail}</small>}</div><span style={{ color: '#8c9c98', fontSize: 12 }}>{library.length} of 30 saved</span></div>
