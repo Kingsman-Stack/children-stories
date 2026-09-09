@@ -20,6 +20,7 @@
 .submit { width: 100%; display: flex; justify-content: space-between; border: 0; border-radius: 8px; margin-top: 24px; padding: 14px; background: #397d74; color: white; font-weight: 700; cursor: pointer; }
 .submit:disabled { opacity: .6; cursor: wait; }
 .message { color: #397d74; font-size: 12px; line-height: 1.5; }
+.consent { display: flex !important; gap: 9px; align-items: flex-start; text-transform: none !important; font-size: 12px !important; font-weight: 400 !important; line-height: 1.5; }.consent input { width: auto; margin-top: 3px; }
 .switch { display: block; border: 0; background: none; color: #397d74; font-size: 12px; font-weight: 700; margin: 18px auto 0; cursor: pointer; }
 .back { color: #8ca7a4; display: inline-block; font-size: 12px; margin-top: 22px; text-decoration: none; }
 @media (max-width: 760px) { .page { padding: 22px 17px; }.layout { display: block; min-height: auto; }.intro { margin: 80px auto 38px; text-align: center; }.intro p { margin: auto; }.constellation { margin-top: 24px; }.card { max-width: 450px; margin: auto; padding: 26px 22px; } }
