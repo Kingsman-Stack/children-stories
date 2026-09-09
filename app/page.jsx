@@ -39,6 +39,7 @@ export default function Home() {
 
   async function saveStory() {
     if (!story) return;
+    if (!parentEmail) { window.location.href = '/auth'; return; }
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
@@ -87,6 +88,7 @@ export default function Home() {
 
   async function generateAiNarration() {
     if (!story) return;
+    if (!parentEmail) { window.location.href = '/auth'; return; }
     setIsNarrating(true);
     setStatus('Creating a gentle AI narration...');
     const response = await fetch('/api/narrate-story', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(story) });
@@ -98,7 +100,7 @@ export default function Home() {
   }
 
   function printStory() {
-    if (!parentEmail) { setStatus('Sign in as a parent to print or save a PDF.'); return; }
+    if (!parentEmail) { window.location.href = '/auth'; return; }
     window.print();
   }
 
