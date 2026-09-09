@@ -1,0 +1,9 @@
+@media print {
+  body { background: white !important; }
+  body * { visibility: hidden !important; }
+  #story-print, #story-print * { visibility: visible !important; }
+  #story-print { position: absolute; inset: 0; width: 100%; padding: 42px; background: white; color: #263335; }
+  #story-print .story-actions { display: none !important; }
+  #story-print h2 { color: #397d74; font-size: 32px; }
+  #story-print p { color: #263335 !important; font-size: 16px !important; line-height: 1.8 !important; }
+}

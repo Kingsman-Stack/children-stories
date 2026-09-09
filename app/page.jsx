@@ -97,6 +97,10 @@ export default function Home() {
     setIsNarrating(false);
   }
 
+  function printStory() {
+    window.print();
+  }
+
   return <main className="shell">
     <nav className={styles.nav}><a className="brand" href="/">story<span>sprout</span></a><div className={styles.navLinks}><span className={`${styles.navNote} nav-note`}>A little magic for every bedtime</span><a className={styles.parentLink} href="/dashboard"><span>Parent dashboard</span> <span>↗</span></a></div></nav>
     <section className="hero"><p className="eyebrow">YOUR STORY STUDIO</p><h1>Big adventures.<br /><em>Little listeners.</em></h1><p>Create a safe, one-of-a-kind story made for your child.</p></section>
@@ -109,7 +113,7 @@ export default function Home() {
         <label htmlFor="lesson">What should they discover?</label><textarea id="lesson" name="lesson" maxLength={500} placeholder="Being brave can start with one tiny step" />
         <button className="primary" type="submit">Generate my story <span>↗</span></button>{status && <p className="status" role="status">{status}</p>}
       </form>
-      <aside className="preview"><p className="step">YOUR STORY</p>{story ? <article className="story"><p className="story-theme">{story.theme}</p><h2>{story.title}</h2>{story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}<div className="story-actions"><button type="button" className="secondary" onClick={generateAiNarration} disabled={isNarrating}>{isNarrating ? 'Making audio...' : 'Generate AI narration'}</button>{audioUrl && <audio controls src={audioUrl} aria-label="AI story narration" />}<button type="button" className="secondary" onClick={saveStory}>Save story</button><button type="button" className="secondary" onClick={() => setStory(null)}>Make another ↗</button></div></article> : <><div className="moon">☾</div><h2>Your story starts here</h2><p>Fill in a few details and watch a new adventure bloom.</p><div className="stars">· · ✦ · ·</div></>}</aside>
+      <aside className="preview"><p className="step">YOUR STORY</p>{story ? <article className="story" id="story-print"><p className="story-theme">{story.theme}</p><h2>{story.title}</h2>{story.paragraphs.map((paragraph, index) => <p key={index}>{paragraph}</p>)}<div className="story-actions"><button type="button" className="secondary" onClick={generateAiNarration} disabled={isNarrating}>{isNarrating ? 'Making audio...' : 'Generate AI narration'}</button>{audioUrl && <audio controls src={audioUrl} aria-label="AI story narration" />}<button type="button" className="secondary" onClick={saveStory}>Save story</button><button type="button" className="secondary" onClick={printStory}>Print / Save PDF</button><button type="button" className="secondary" onClick={() => setStory(null)}>Make another ↗</button></div></article> : <><div className="moon">☾</div><h2>Your story starts here</h2><p>Fill in a few details and watch a new adventure bloom.</p><div className="stars">· · ✦ · ·</div></>}</aside>
     </section>
       <section className="library" aria-label="Parent story library" style={{ marginTop: 24, background: '#fffefa', border: '1px solid #e4e9e5', borderRadius: 18, padding: 26 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16, flexWrap: 'wrap' }}><div><p className="step">PARENT LIBRARY</p><h2 style={{ fontFamily: 'Georgia, serif', margin: '8px 0 4px' }}>Saved stories</h2>{parentEmail && <small style={{ color: '#397d74' }}>Cloud library for {parentEmail}</small>}</div><span style={{ color: '#8c9c98', fontSize: 12 }}>{library.length} of 30 saved</span></div>
