@@ -20,11 +20,10 @@
 - Read-along highlighting synchronized with narration.
 - Parent dashboard with read history, streaks, and vocabulary.
 - Story library and history per child profile.
-- Narrated story videos, starting with safe slideshow videos and later optional animation.
 
 ## Non-Negotiables
 
-- Two-pass content safety: moderate input before generation and text, illustrations, audio, captions, and video output before delivery.
+- Two-pass content safety: moderate input before generation and text, illustrations, and audio output before delivery.
 - NDPR/COPPA-aligned data handling: parental consent, data minimization, retention limits, export, and deletion flows.
 - No direct child accounts. A parent or guardian owns the account and manages child profiles.
 - No exposed provider keys, service-role keys, or private media URLs in the browser.
@@ -46,7 +45,7 @@
 - Treat all user content as untrusted data inside a structured prompt template.
 - Input and output moderation.
 - Per-user and per-IP rate limiting.
-- Queue long-running story, TTS, image, and video work.
+- Queue long-running story, TTS, and image work.
 
 ### Phase 3: Frontend Core
 
@@ -92,7 +91,6 @@
 - Story generation: Claude API through a server-only provider adapter.
 - Illustrations: Stable Diffusion or DALL-E through a server adapter and private CDN storage.
 - TTS: ElevenLabs or Amazon Polly, subject to language and child-safety review.
-- Video: managed image-to-video provider or a server-side media worker; start with narrated slideshow composition.
 - Backend: Next.js server routes or Node.js service for long-running workers.
 - Database: Supabase Postgres with RLS.
 - Auth: Supabase Auth or Clerk with a parental-consent flow.

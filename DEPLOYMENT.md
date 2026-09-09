@@ -30,8 +30,6 @@ Keep these server-only for later features:
 ```text
 SUPABASE_SERVICE_ROLE_KEY
 ELEVENLABS_API_KEY
-VIDEO_PROVIDER_API_KEY
-VIDEO_PROVIDER_BASE_URL
 ```
 
 ## Supabase
